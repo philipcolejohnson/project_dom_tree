@@ -1,6 +1,8 @@
+Node = Struct.new(:data, :children, :parent)
+
 class DomParser
   def initialize
-
+    #@html = html
   end
 
   def parser_script(string)
@@ -25,6 +27,32 @@ class DomParser
     end
 
     tag
+  end
 
+  def create_tree
+    parser_script(@html)
+    @root = create_node(@elements[0])
+    # current_node = @root
+    make_children(@root)
+  end
+
+  def create_node(tag, parent = nil)
+    Node.new(tag, nil, parent)
+  end
+
+  def make_children(parent)
+    # return if the next one is a closing tag?
+    return if closing_tag?(@elements.first)
+    # if next one is a tag
+    
+    # create a node
+    # make_children(node)
+    # else
+    # create a node
+    # loops until we hit closing tag
+  end
+
+  def closing_tag?(element)
+    element[1] == "/" 
   end
 end

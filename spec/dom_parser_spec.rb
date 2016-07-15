@@ -26,5 +26,16 @@ describe DomParser do
       expect(subject.parse_tag(tag).keys).to eq([:type, :class, :id, :src])
     end
 
+    it "has the correct values for each key" do
+      tag = "<p class=\"foo bar\" id='baz' src = 'hello' >"
+      expect(subject.parse_tag(tag).values).to eq(["p", "foo bar", "baz", "hello"])
+    end
+  end
+
+  describe "#closing_tag?" do 
+    it "validates a normal closing tag" do
+      tag = "</a>"
+      expect(subject.closing_tag?(tag)).to be(true)
+    end
   end
 end
