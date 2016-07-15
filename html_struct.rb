@@ -2,19 +2,27 @@
 
 def parse_tag(string)
   tag = {}
+  
+  # save tag after < character
   tag_type = string.match(/<(\w+) /)
-  attributes = string.scan(/(\w+)\s*=\s*['|"](.*?)['|"]/)
 
+  # saves either side of an equal sign
+  attributes = string.scan(/(\w+)\s*=\s*['"](.*?)['"]/)
+
+  #options
+  options = string.scan(/\s*(\w)\s*[^=]/)
   
   tag[:type] = tag_type[1]
   attributes.each do |attribute|
     tag[attribute[0].to_sym] = attribute[1]
   end
 
-  p tag 
+  tag
 
 end
 
-# tag = parse_tag("<p class='foo bar' id='baz' src = 'hello'>")
+# p tag = parse_tag("<p class=\"foo bar\" id='baz' src = 'hello' repeat>")
 
-# tag = parse_tag("<img src='http://www.example.com' title='funny things'>")
+# p tag = parse_tag("<img src='http://www.example.com' title = 'funny things' repeat>")
+
+Node = Struct.new(:data, :children, :parent)
