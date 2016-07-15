@@ -24,5 +24,16 @@ end
 # p tag = parse_tag("<p class=\"foo bar\" id='baz' src = 'hello' repeat>")
 
 # p tag = parse_tag("<img src='http://www.example.com' title = 'funny things' repeat>")
+p tag = parse_tag("<div>  div text before  <p>    p text  </p>  <div>    more div text  </div>  div text after</div>"
+)
 
 Node = Struct.new(:data, :children, :parent)
+
+def parser_script(string)
+
+
+end
+
+
+html_string = "<div>  div text before  <p>    p text  </p>  <div>    more div text  </div>  div text after</div>"
+
