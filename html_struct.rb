@@ -46,6 +46,16 @@ def parser_script(string)
 
 end
 
+split string into array of tags (opening and closing)
+create root node from first tag (data=tag, parent nil children nil)
+set root node as current_node
+
+  if closing_tag, current_node = current_node.parent
+  node = Node.new(tag, parent = current_node, children=nil)
+  current_node.children << node
+
+
+
 
 html_string = "<div>  div text before  <p>    p text  </p>  <div>    more div text  </div>  div text after</div>"
 
