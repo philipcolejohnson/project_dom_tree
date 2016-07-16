@@ -1,13 +1,54 @@
-Node = Struct.new(:data, :children, :parent)
+Node = Struct.new(:data, :depth, :children, :parent)
 
 class DomParser
   TAG_TYPE_REGEX = /<[\/|!]?(\w+)(?:>| )/
   TAG_ATTR_REGEX = /(\w+)\s*=\s*['"](.*?)['"]/
   HTML_REGEX = /((?<=>).*?(?=<)|<.*?>)/
 
+  attr_reader :root, :elements
+
   def initialize
     #@html = html
     @elements = []
+  end
+
+  def output
+    print_all(@root)
+  end
+
+  def print_all(node)
+    
+    print_node(node)
+    
+    node.children.each { |child| print_all(child) }
+  
+    print_closing_tag(node) if tag_node?(node)
+  end
+
+  def print_node(node)
+    string = "   " * node.depth
+    if tag_node?(node)
+      string << "<#{node.data[:type]}"
+      node.data.each do |key, value|
+        unless key == :type
+          string << " #{key.to_s}=\"#{value}\""
+        end
+      end
+      string << ">"
+    else
+      string << node.data
+    end
+    puts string
+  end
+
+  def print_closing_tag(tag_node)
+    begin
+      string = "   " * tag_node.depth
+      string << "</#{tag_node.data[:type]}>"
+      puts string
+    rescue
+      raise "#{tag_node.data} is not a tag"
+    end
   end
 
   def parser_script(string)
@@ -47,17 +88,17 @@ class DomParser
 
   def begin_process(first)
     if first[:type] == "DOCTYPE"
-      @root = create_node(parse_tag(@elements[1]))
+      @root = create_node(parse_tag(@elements[1]), 0)
       make_children(@root, 2)
     else
-      @root = create_node(first)
+      @root = create_node(first, 0)
       make_children(@root, 1)
     end
   end
 
   #creates a node with no children and an optional parent
-  def create_node(data, parent = nil)
-    Node.new(data, [], parent)
+  def create_node(data, depth, parent = nil)
+    Node.new(data, depth, [], parent)
   end
 
 
@@ -68,8 +109,7 @@ class DomParser
       return tag_index + 1 if closing_tag_for?(@elements[tag_index], parent)
     
       if opening_tag?(@elements[tag_index])
-        new_child = create_tag_child(@elements[tag_index], parent)
-        tag_index = make_children(new_child, tag_index + 1)
+        tag_index = create_tag_child(@elements[tag_index], parent, tag_index)
       elsif !tag?(@elements[tag_index])
         create_text_child(@elements[tag_index], parent)
         tag_index += 1
@@ -87,17 +127,19 @@ class DomParser
       return false if !closing_tag?(current_element)
       current_element = parse_tag(current_element)
       current_element[:type] == parent_node.data[:type]
+    else
+      false
     end
   end
 
-  def create_tag_child(string, parent)
-    new_child = create_node(parse_tag(string), parent)
+  def create_tag_child(string, parent, tag_index)
+    new_child = create_node(parse_tag(string), parent.depth + 1, parent)
     parent.children << new_child
-    new_child
+    tag_index = make_children(new_child, tag_index + 1)
   end
 
   def create_text_child(string, parent)
-    parent.children << create_node(string, parent)
+    parent.children << create_node(string, parent.depth + 1, parent)
   end
 
   def opening_tag?(tag)
@@ -110,5 +152,9 @@ class DomParser
 
   def tag?(string)
     string[0] == "<"
+  end
+
+  def tag_node?(node)
+    node.data.is_a?(Hash)
   end
 end
