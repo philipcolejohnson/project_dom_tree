@@ -33,23 +33,43 @@ class DomParser
     parser_script(@html)
     @root = create_node(@elements[0])
     # current_node = @root
-    make_children(@root)
+    make_children(@root, 1)
   end
 
   def create_node(tag, parent = nil)
     Node.new(tag, nil, parent)
   end
 
-  def make_children(parent)
+
+  def make_children(parent, tag_index)
+
+    current_node = parent
+
+
+
     # return if the next one is a closing tag?
-    return if closing_tag?(@elements.first)
-    # if next one is a tag
+    loop do 
+      return if closing_tag_for?(@elements[tag_index, parent])
+      # if next one is a tag
+      if opening_tag?(@elements[tag_index])
+        create_node(parse_tag(@elements[tag_index]), parent)
+      end
+    end
     
     # create a node
     # make_children(node)
     # else
     # create a node
     # loops until we hit closing tag
+  end
+
+  def closing_tag_for?(current_tag, parent_node)
+    #check if current tag is closing_tag && current_tag.type = parent_node.type.
+
+  end
+
+  def opening_tag?(tag)
+    !closing_tag?(tag) && tag[0]=="<"
   end
 
   def closing_tag?(element)

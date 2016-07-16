@@ -30,12 +30,35 @@ describe DomParser do
       tag = "<p class=\"foo bar\" id='baz' src = 'hello' >"
       expect(subject.parse_tag(tag).values).to eq(["p", "foo bar", "baz", "hello"])
     end
+
+    it "handles closing tags" do
+      tag = "</p>"
+      expect(subject.parse_tag(tag)[:type]).to eq("p")
+    end
+
   end
 
   describe "#closing_tag?" do 
     it "validates a normal closing tag" do
       tag = "</a>"
       expect(subject.closing_tag?(tag)).to be(true)
+    end
+
+    it "returns false when passed an opening tag" do
+      tag = "<a>"
+      expect(subject.closing_tag?(tag)).to be(false)
+    end
+  end
+
+  describe "#opening_tag?" do
+    it "returns true when passed an opening tag" do
+      tag = "<a>"
+      expect(subject.opening_tag?(tag)).to be(true)
+    end
+
+    it "returns false when passed an closing tag" do
+      tag = "</a>"
+      expect(subject.opening_tag?(tag)).to be(false)
     end
   end
 end
