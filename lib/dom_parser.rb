@@ -2,6 +2,7 @@ class DomParser
   TAG_TYPE_REGEX = /<[\/|!]?(\w+)(?:>| )/
   TAG_ATTR_REGEX = /(\w+)\s*=\s*['"](.*?)['"]/
   HTML_REGEX = /((?<=>).*?(?=<)|<.*?>)/
+  SINGLE_TAGS = ["img","br", "hr", "embed", "link", "meta", "source", "param", "track", "wbr", "area", "base", "col", "command", "input", "keygen"]
   TAB = "  "
 
   attr_reader :root, :elements
@@ -79,6 +80,7 @@ class DomParser
 
     def print_closing_tag(tag_node)
       begin
+        return if SINGLE_TAGS.include?(tag_node.data[:type]) 
         string = TAB * tag_node.depth
         string << "</#{tag_node.data[:type]}>"
         puts string
@@ -149,14 +151,19 @@ class DomParser
         return true if @elements[tag_index].nil?
         return tag_index + 1 if closing_tag_for?(@elements[tag_index], parent)
       
-        if opening_tag?(@elements[tag_index])
+
+        if opening_tag?(@elements[tag_index]) && !SINGLE_TAGS.include?(parse_tag(@elements[tag_index])[:type])
           tag_index = create_tag_child(@elements[tag_index], parent, tag_index)
         elsif !tag?(@elements[tag_index])
           create_text_child(@elements[tag_index], parent)
           tag_index += 1
-        else
+        elsif SINGLE_TAGS.include?(parse_tag(@elements[tag_index])[:type])
+          create_single_tag(@elements[tag_index], parent)
+          tag_index += 1
+        else 
           # we've hit an unexpected closing tag
-          raise "Closing tag #{@elements[tag_index]} is incorrectly placed"
+          puts "Unexpected tag: #{elements[tag_index]}"
+          raise ArgumentError
         end
       end
 
@@ -177,6 +184,10 @@ class DomParser
       new_child = create_node(parse_tag(string), parent.depth + 1, parent)
       parent.children << new_child
       tag_index = make_children(new_child, tag_index + 1)
+    end
+
+    def create_single_tag(string, parent)
+      parent.children << create_node(parse_tag(string), parent.depth + 1, parent)
     end
 
     def create_text_child(string, parent)
