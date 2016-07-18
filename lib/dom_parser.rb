@@ -42,6 +42,16 @@ class DomParser
     begin_process(first)
   end
 
+  def edit_element(node)
+    print_node(node)
+    puts "Please input new text for the element."
+    input = gets.chomp
+    node.data = (tag?(input) ? parse_tag(input) : input)
+    puts
+    puts "Element changed to:"
+    print_node(node)
+  end
+
   private
     def print_all(node)
       print_node(node)
