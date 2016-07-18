@@ -20,9 +20,16 @@ s = TreeSearcher.new(tree)
 # search by string or regular expression
 divs = s.search_by(:type, "div")
 divs.each { |node| r.render(node) }
+bodies = s.search_ancestors(divs[1], :type, "body")
+bodies.each { |node| r.render(node) }
+imgs = s.search_children(tree.root, :type, "img")
+imgs.each { |node| r.render(node) }
 
 # use tree.edit_element to change a node
 # note: changing a tag will also change its closing tag
 #       or delete the closing tag if it's text
 divs = s.search_by(:type, "div")
 tree.edit_element(divs[0])
+
+# output the entire DOM structure
+tree.output
