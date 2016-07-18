@@ -11,21 +11,33 @@ class DomParser
   end
 
   def output
+    if @elements.empty?
+      puts "First input some HTML"
+      puts "Use #build_tree('filename')"
+      puts "or #create_tree('<html> string')"
+      return nil
+    end
+
     if tag?(@elements.first) && parse_tag(@elements.first)[:type].upcase == "DOCTYPE"
       puts @elements.first
     end
     print_all(@root)
+    true
   end
 
   def build_tree(filename)
-    html = File.open(filename, "r").read
+    begin
+      html = File.open(filename, "r").read
+    rescue Errno::ENOENT
+      raise ArgumentError, "File does not exist"
+    end
     create_tree(html)
   end
 
   def create_tree(html)
     @elements = []
     parser_script(html)
-    raise ArgumentError "Not a proper HTML document." unless tag?(@elements[0])
+    raise ArgumentError, "Improper HTML" unless ( @elements[0] && tag?(@elements[0]) )
     first = parse_tag(@elements[0])
     begin_process(first)
   end

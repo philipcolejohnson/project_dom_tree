@@ -121,8 +121,22 @@ describe DomParser do
     end
 
     it "raises an error if the doctument doesn't start with a tag" do
-      html = "Not HTML"
+      html = "Not proper <HTML>"
       expect{ subject.create_tree(html) }.to raise_error(ArgumentError )
+    end
+  end
+
+  describe "#build_tree" do 
+    it "raises an error if the file doesn't exist" do
+      expect{ subject.build_tree("not_a_file") }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe "#output" do 
+    it "won't output anything unless tree is already built" do
+      allow(subject).to receive(:puts)
+      expect(subject).to_not receive(:print_all)
+      subject.output
     end
   end
 
