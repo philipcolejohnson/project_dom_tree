@@ -5,22 +5,32 @@ describe DomParser do
   describe "#parser_script" do
     it "converts a string to array of tags" do
       string = "<div>  div text before  <p>    p text  </p>  <div>    more div text  </div>  div text after</div>"
-      expect(subject.parser_script(string).length).to eq(11)
+      subject.parser_script(string)
+      expect(subject.elements.length).to eq(10)
     end
 
     it "parses a tag correctly" do
       string ="<div class='foo bar'>"
-      expect(subject.parser_script(string).first).to eq(["<div class='foo bar'>"])
+      subject.parser_script(string)
+      expect(subject.elements.first).to eq("<div class='foo bar'>")
     end
 
     it "parses a text element" do 
       string ="<div class='foo bar'> hello </div>"
-      expect(subject.parser_script(string)[1]).to eq([" hello "])
+      subject.parser_script(string)
+      expect(subject.elements[1]).to eq("hello")
     end
 
-    it "separates when there are no spaces" do
+    it "recognizes tags when there are no spaces between them" do
       string = "<html><div></div> Text <p></p></html>"
-      expect(subject.parser_script(string).length).to eq(7)
+      subject.parser_script(string)
+      expect(subject.elements[1]).to eq("<div>")
+    end
+
+    it "handles newline characters" do
+      string = "<html><div></div> Text\n <p></p></html>"
+      subject.parser_script(string)
+      expect(subject.elements[4]).to eq("<p>")
     end
 
   end
@@ -97,47 +107,20 @@ describe DomParser do
     end
   end
 
-  describe "#create_tree" do
-    
+  describe "#create_tree" do 
     it "creates all first level nodes" do
-      html = "<html><div></div> Text <p></p></html>"
+      html = "<html> <div> </div> Text <p> </p> </html>"
       subject.create_tree(html)
       expect(subject.root.children.length).to eq(3)
     end
 
+    it "creates child nodes for first level nodes" do
+      html = "<html> <div> <p> </p> </div> </html>"
+      subject.create_tree(html)
+      expect(subject.root.children[0].children[0].data[:type]).to eq("p")
+    end
   end
 
-  # describe "#make_children" do
-  #   let(:parent) { subject.create_node({ type: "p" }) }
-  #   let(:current_node) { double(elements: ["hi", "<img>", "</p>"] ) }
-
-  #   it "creates child nodes of tags" do
-  #     allow(subject).to receive(:closing_tag_for?).and_return(false, true)
-  #     allow(subject).to receive(:opening_tag?).and_return(true)
-  #     allow(subject).to receive(:parse_tag)
-  #       .and_return({ type: "img" })
-  #     allow(subject).to receive(:elements).and_return("<img>", "</p>")
-  #     expect(subject).to receive(:create_tag_child).and_return(2)
-  #     subject.make_children(parent, 0)
-  #   end
-
-  #   it "creates child nodes of text"
-
-  #   it "can make children of both text and tags"
-
-  #   it "recursively calls #make_children on tag children" do
-
-  #     allow(subject).to receive(:closing_tag_for?).and_return(false, true)
-  #     allow(subject).to receive(:opening_tag?).and_return(true)
-  #     allow(subject).to receive(:parse_tag)
-  #       .and_return({ type: "img" })
-  #     allow(subject).to receive(:elements[0]).and_return("<img>")
-  #     expect(subject).to receive(:make_children).and_return(2)
-  #     subject.make_children(parent, 0)
-  #   end
-
-  #   it "stops when it hits a closing tag match"
-  # end
 end
 
 # load './lib/dom_parser.rb'

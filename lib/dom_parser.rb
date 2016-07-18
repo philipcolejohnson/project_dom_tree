@@ -1,23 +1,29 @@
-Node = Struct.new(:data, :depth, :children, :parent)
+Node = Struct.new(:data, :depth, :children, :parent) do
+  def tag?
+    data.is_a?(Hash)
+  end
+end
 
 class DomParser
   TAG_TYPE_REGEX = /<[\/|!]?(\w+)(?:>| )/
   TAG_ATTR_REGEX = /(\w+)\s*=\s*['"](.*?)['"]/
   HTML_REGEX = /((?<=>).*?(?=<)|<.*?>)/
+  TAB = "  "
 
   attr_reader :root, :elements
 
   def initialize
-    #@html = html
     @elements = []
   end
 
   def output
+    if tag?(@elements.first) && parse_tag(@elements.first)[:type].upcase == "DOCTYPE"
+      puts @elements.first
+    end
     print_all(@root)
   end
 
   def print_all(node)
-    
     print_node(node)
     
     node.children.each { |child| print_all(child) }
@@ -26,7 +32,7 @@ class DomParser
   end
 
   def print_node(node)
-    string = "   " * node.depth
+    string = TAB * node.depth
     if tag_node?(node)
       string << "<#{node.data[:type]}"
       node.data.each do |key, value|
@@ -43,7 +49,7 @@ class DomParser
 
   def print_closing_tag(tag_node)
     begin
-      string = "   " * tag_node.depth
+      string = TAB * tag_node.depth
       string << "</#{tag_node.data[:type]}>"
       puts string
     rescue
@@ -52,17 +58,32 @@ class DomParser
   end
 
   def parser_script(string)
-    # save everything, split by tags or text
-    string.scan(HTML_REGEX).each { |item| @elements << item[0] }
+    # string.scan(HTML_REGEX).each { |item| @elements << item[0] }
+    index = 0
+    buffer = ""
+    tag = false
+    until index == string.length
+      if string[index] == '<'
+        @elements << buffer.strip unless buffer.strip.empty?
+        buffer = "<"
+        tag = true
+      elsif string[index] == '>' && tag
+        tag = false
+        @elements << buffer + '>'
+        buffer = ""
+      elsif string[index] == "\n"
+        buffer << string[index] unless buffer.empty?
+      else
+        buffer << string[index]
+      end 
+      index += 1
+    end
   end
 
   def parse_tag(string)
     tag = {}
 
-    # save tag after < character
     tag_type = string.match(TAG_TYPE_REGEX)
-
-    # saves either side of an equal sign
     attributes = string.scan(TAG_ATTR_REGEX)
 
     #options (TODO)
@@ -76,7 +97,13 @@ class DomParser
     tag
   end
 
+  def build_tree(filename)
+    html = File.open(filename, "r").read
+    create_tree(html)
+  end
+
   def create_tree(html)
+    @elements = []
     parser_script(html)
     if tag?(@elements[0])
       first = parse_tag(@elements[0]) 
@@ -87,7 +114,7 @@ class DomParser
   end
 
   def begin_process(first)
-    if first[:type] == "DOCTYPE"
+    if first[:type].upcase == "DOCTYPE"
       @root = create_node(parse_tag(@elements[1]), 0)
       make_children(@root, 2)
     else
@@ -143,7 +170,7 @@ class DomParser
   end
 
   def opening_tag?(tag)
-    !closing_tag?(tag) && tag[0]=="<"
+    !closing_tag?(tag) && tag[0] == "<"
   end
 
   def closing_tag?(element)
