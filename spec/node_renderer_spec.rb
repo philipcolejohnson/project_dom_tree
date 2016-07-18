@@ -1,4 +1,4 @@
-require 'node_renderer'
+require 'dom'
 
 describe NodeRenderer do
 
